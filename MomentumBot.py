@@ -22,8 +22,8 @@ class MomentumBot:
         )
 
         # Stop loss and take profit in pips
-        self.stop_loss_pips = 0.2
-        self.take_profit_pips = 0.2
+        self.stop_loss_pips = 0.3
+        self.take_profit_pips = 0.3
 
         api.Print("Momentum bot started on " + api.SymbolName)
         api.Print("Volume in units: " + str(self.volume))
@@ -73,15 +73,15 @@ class MomentumBot:
                 return
 
         # Close positions in the opposite direction
-        for position in positions:
-            result = api.ClosePosition(position)
+        # for position in positions:
+        #     result = api.ClosePosition(position)
 
-            if not result.IsSuccessful:
-                api.Print(
-                    "Could not close existing position. "
-                    "Skipping new order."
-                )
-                return
+        #     if not result.IsSuccessful:
+        #         api.Print(
+        #             "Could not close existing position. "
+        #             "Skipping new order."
+        #         )
+        #         return
 
         # Open a market order with SL and TP
         result = api.ExecuteMarketOrder(
@@ -94,6 +94,10 @@ class MomentumBot:
         )
 
         if result.IsSuccessful:
+
+
+            position = result.Position
+            
             api.Print(
                 "Opened {} position. SL={} pips, TP={} pips".format(
                     target,
@@ -101,5 +105,12 @@ class MomentumBot:
                     self.take_profit_pips
                 )
             )
+
+            api.Print("Entry price: " + str(position.EntryPrice))
+            api.Print("Stop loss price: " + str(position.StopLoss))
+            api.Print("Take profit price: " + str(position.TakeProfit))
+            api.Print("Pip size: " + str(api.Symbol.PipSize))
+            api.Print("Tick size: " + str(api.Symbol.TickSize))
+
         else:
             api.Print("Order failed: " + str(result.Error))

@@ -1,0 +1,74 @@
+{
+  "AddIndicators": false,
+  "AccessRights": "None",
+  "TimeZone": "UTC",
+  "AdditionalInfoUrl": null,
+  "Parameters": [
+    {
+      "DisplayName": "",
+      "Name": "LowerMomentumMinutes",
+      "Description": "",
+      "Type": "Integer",
+      "DefaultValue": 1,
+      "MinValue": -2147483648,
+      "MaxValue": 2147483647,
+      "Step": 1,
+      "Group": null,
+      "IsValueVisibleInTitle": true,
+      "EnumTypeFullName": null
+    },
+    {
+      "DisplayName": "",
+      "Name": "HigherMomentumMinutes",
+      "Description": "",
+      "Type": "Integer",
+      "DefaultValue": 7,
+      "MinValue": -2147483648,
+      "MaxValue": 2147483647,
+      "Step": 1,
+      "Group": null,
+      "IsValueVisibleInTitle": true,
+      "EnumTypeFullName": null
+    },
+    {
+      "DisplayName": "",
+      "Name": "VolumeInLots",
+      "Description": "",
+      "Type": "Double",
+      "DefaultValue": 0.01,
+      "MinValue": -1.7976931348623157E+308,
+      "MaxValue": 1.7976931348623157E+308,
+      "Step": 1,
+      "Group": null,
+      "IsValueVisibleInTitle": true,
+      "EnumTypeFullName": null
+    },
+    {
+      "DisplayName": "",
+      "Name": "StopLossPips",
+      "Description": "",
+      "Type": "Double",
+      "DefaultValue": 0.3,
+      "MinValue": -1.7976931348623157E+308,
+      "MaxValue": 1.7976931348623157E+308,
+      "Step": 1,
+      "Group": null,
+      "IsValueVisibleInTitle": true,
+      "EnumTypeFullName": null
+    },
+    {
+      "DisplayName": "",
+      "Name": "TakeProfitPips",
+      "Description": "",
+      "Type": "Double",
+      "DefaultValue": 0.3,
+      "MinValue": -1.7976931348623157E+308,
+      "MaxValue": 1.7976931348623157E+308,
+      "Step": 1,
+      "Group": null,
+      "IsValueVisibleInTitle": true,
+      "EnumTypeFullName": null
+    }
+  ],
+  "Enums": []
+}
