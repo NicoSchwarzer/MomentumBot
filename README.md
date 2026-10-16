@@ -1,181 +1,231 @@
-# BTC/USD Double Momentum Trading Strategy
+# BTC/USD Double Momentum Trading Bot
 
-A Python-based research and trading project for exploring a double-momentum strategy on BTC/USD using cTrader. The project includes historical market-data retrieval through the cTrader Open API, exploratory time-series analysis in a Jupyter notebook, and a cTrader Python cBot that trades when short- and longer-term momentum agree.
+A quantitative trading project exploring short-term momentum in the BTC/USD market using Python, C#, and cTrader.
 
-> **Risk warning:** This project is experimental and is not financial advice. Automated trading can lose money. Test thoroughly with historical data and a demo account before considering live use. Stop-loss/take-profit distances, spread, commissions, slippage, contract specifications, and broker restrictions can materially affect results.
+The repository combines historical market-data retrieval, exploratory time-series analysis, and automated trading implementations. The core strategy uses momentum measured over different time horizons to identify potential short-term trading opportunities.
 
-## Project structure
+> **Disclaimer:** This project is intended for educational and research purposes. It is experimental software, not financial advice. Backtested or historical performance does not guarantee future results. Automated trading can result in substantial financial losses.
 
-```text
-.
-├── Get_Account_ID.py
-├── Data_Retrieval.py
-├── DoubleMomentumAnalysis.ipynb
-├── MomentumBot.py
-├── credentials.json          # Create locally; do not commit
-└── data/
-    └── btcusd_m1.csv          # Created by Data_Retrieval.py
-```
+## Table of Contents
 
-### Files
+- [Overview](#overview)
+- [Trading Strategy](#trading-strategy)
+- [Repository Structure](#repository-structure)
+- [Getting Started](#getting-started)
+- [Historical Data Retrieval](#historical-data-retrieval)
+- [Exploratory Analysis](#exploratory-analysis)
+- [Running the Trading Bot](#running-the-trading-bot)
+- [Risk Management and Limitations](#risk-management-and-limitations)
+- [Future Improvements](#future-improvements)
 
-- **`Get_Account_ID.py`** — despite its filename, the uploaded version is a historical tick-data downloader. It requests BID and ASK ticks through the cTrader Open API, saves raw quote data, and attempts to aggregate quotes to a one-second dataset. It expects a local `credentials.json` file.
-- **`Data_Retrieval.py`** — downloads approximately one year of BTC/USD one-minute candles and saves them to `data/btcusd_m1.csv`.
-- **`DoubleMomentumAnalysis.ipynb`** — notebook for data checks, autoregressive/time-series analysis, momentum calculations, and comparisons across momentum lookback periods.
-- **`MomentumBot.py`** — cTrader Python cBot implementing the double-momentum signal and submitting market orders with configured stop loss and take profit.
+## Overview
 
-## Strategy
+The project investigates whether combining momentum signals from different time horizons can provide useful trading signals for BTC/USD.
 
-For closing price \(P_t\), define the \(k\)-minute relative momentum as
+The main components are:
+
+- **Data acquisition:** Retrieve historical market data through the cTrader Open API.
+- **Quantitative analysis:** Explore price dynamics, autocorrelation, and momentum signals using Python and Jupyter notebooks.
+- **Automated execution:** Implement a rule-based momentum strategy as a cTrader cBot in Python and C#.
+- **Strategy evaluation:** Provide a foundation for backtesting, parameter selection, and further development of quantitative trading strategies.
+
+## Trading Strategy
+
+### Double Momentum
+
+The strategy combines short-term and longer-term momentum to identify directional market movements.
+
+For a closing price \(P_t\), define the relative momentum over a lookback period of \(k\) minutes as
 
 \[
 M_t^{(k)} = \frac{P_t}{P_{t-k}} - 1.
 \]
 
-The current bot uses a **1-minute** and a **7-minute** lookback:
+The current Python implementation uses two lookback periods:
 
-- **Buy / long:** both momentum values are positive.
-- **Sell / short:** both momentum values are negative.
-- **Mixed or zero signals:** do not open a new trade; an existing position is left unchanged.
+- Short-term momentum: 1 minute
+- Longer-term momentum: 7 minutes
 
-The cBot evaluates the signal on a closed bar. Attach it to a **BTC/USD one-minute chart** so that the bar offsets correspond to minutes.
+### Trading Rules
 
-The uploaded bot currently configures:
-- Position size: `0.01` lots (example setting; verify it is valid for your broker).
-- Stop loss: `0.2` pips.
-- Take profit: `0.2` pips.
-- Order type: market orders.
-- Position management: positions are identified by the bot label and symbol; an opposite position is closed before a new position is opened.
+| Short-term momentum | Longer-term momentum | Signal |
+|---|---|---|
+| Positive | Positive | Buy / long |
+| Negative | Negative | Sell / short |
+| Mixed or zero | Any other value | No new signal |
 
-**Important:** cTrader expects stop-loss and take-profit distances in pips for the market-order call. A setting of `0.2` pips may be below the symbol's allowed minimum distance or smaller than the spread and trading costs. Verify BTC/USD pip size, volume units, minimum volume, stop-distance rules, and account currency with your broker. Do not assume that a 0.2-pip target means a $0.20 or $1.00 profit/loss.
+The bot evaluates the signal using closed candles. When both momentum signals agree, it determines the desired trade direction. When the signals disagree or either is zero, the bot does not generate a new directional signal.
 
-## Requirements
+The intended principle is straightforward: enter in the direction of the market when price movements over both time horizons agree.
 
-The research and data-retrieval scripts use Python and several third-party packages, including:
+**Important:** The exact order and position-management behavior depends on the implementation. Review the relevant source file before assuming that the Python and C# versions behave identically.
 
-- `pandas`
-- `numpy`
-- `matplotlib`
-- `seaborn`
-- `statsmodels`
-- `ctrader-open-api`
-- `Twisted`
+## Repository Structure
 
-Install the research/API dependencies in your chosen Python environment. For example:
+```text
+MomentumBot/
+├── Data_Retrieval.py
+├── Get_Account_ID.py
+├── DoubleMomentumAnalysis.ipynb
+├── cTraderExperiments.ipynb
+├── MomentumBot.py
+├── MomentumBotC.cs
+├── config.json
+└── README.md
+```
+
+### Main Files
+
+| File | Description |
+|---|---|
+| `Data_Retrieval.py` | Retrieves historical BTC/USD candle data using the cTrader Open API. |
+| `Get_Account_ID.py` | Contains functionality related to retrieving account or market data; check the current implementation before running it. |
+| `DoubleMomentumAnalysis.ipynb` | Notebook for exploratory time-series analysis and momentum calculations. |
+| `cTraderExperiments.ipynb` | Notebook for experimenting with cTrader-related functionality. |
+| `MomentumBot.py` | Python implementation of the double-momentum cTrader trading bot. |
+| `MomentumBotC.cs` | C# implementation of the trading bot. |
+| `config.json` | Configuration file; inspect its contents before use and never store secrets in a public repository. |
+
+## Getting Started
+
+### Prerequisites
+
+You will need:
+
+- Python installed locally for the research and data-retrieval scripts.
+- A Python environment compatible with the dependencies used by the project.
+- A cTrader account and access to the cTrader Open API for data retrieval.
+- cTrader with the appropriate cBot development environment for automated execution.
+- Git to clone the repository.
+
+### 1. Clone the Repository
 
 ```bash
-python -m pip install pandas numpy matplotlib seaborn statsmodels ctrader-open-api
+git clone https://github.com/NicoSchwarzer/MomentumBot.git
+cd MomentumBot
 ```
 
-If Twisted is not installed automatically as a dependency:
+### 2. Create a Python Environment
+
+Using Conda:
 
 ```bash
-python -m pip install Twisted
+conda create -n momentum-bot python=3.11
+conda activate momentum-bot
 ```
 
-The cTrader cBot runs inside cTrader's Python/cAlgo environment and may have different runtime/API requirements from the standalone Open API scripts. Follow the requirements of your installed cTrader version.
-
-## cTrader Open API credentials
-
-The data-retrieval scripts read credentials from a local file named `credentials.json` in the project root. Create it locally with the fields expected by the scripts:
-
-```json
-{
-  "clientId": "YOUR_CLIENT_ID",
-  "clientSecret": "YOUR_CLIENT_SECRET",
-  "accessToken": "YOUR_ACCESS_TOKEN",
-  "accountId": "YOUR_ACCOUNT_ID"
-}
-```
-
-Use valid credentials from your cTrader Open API application and account. The scripts shown here use the **cTrader demo endpoint**. Confirm the account and environment before running any request.
-
-**Never commit `credentials.json`, access tokens, client secrets, or other authentication material to GitHub.** Add it to `.gitignore` before the first commit:
-
-```gitignore
-credentials.json
-data/
-__pycache__/
-.ipynb_checkpoints/
-.venv/
-.env
-```
-
-If credentials have already been committed, removing the file in a later commit is not enough: revoke/rotate the exposed credentials and remove the secret from the repository history.
-
-## Getting started
-
-### 1. Clone the repository
+Install the core analysis and API dependencies:
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
-cd <YOUR_REPOSITORY_DIRECTORY>
-```
-
-### 2. Create and activate a Python environment
-
-With Conda:
-
-```bash
-conda create -n btc-momentum python=3.11
-conda activate btc-momentum
 python -m pip install pandas numpy matplotlib seaborn statsmodels ctrader-open-api Twisted jupyter
 ```
 
-Choose a Python version compatible with the installed cTrader Open API package and your environment.
+Depending on your Python and cTrader API versions, additional dependencies or compatibility adjustments may be necessary.
 
-### 3. Configure credentials
+## Historical Data Retrieval
 
-Create `credentials.json` in the repository root using the structure above. Ensure the file is ignored by Git.
+The project uses the cTrader Open API to retrieve historical market data.
 
-### 4. Download one-minute candle data
+Before running any data-retrieval script:
 
-Run:
+1. Review the script to identify the required API credentials and account configuration.
+2. Configure the credentials locally using the format expected by the script.
+3. Verify the requested symbol and date range.
+4. Confirm that the API application and account are authorized.
+
+Run the candle-data retrieval script:
 
 ```bash
 python Data_Retrieval.py
 ```
 
-The script requests approximately one year of BTC/USD M1 candles and writes:
+The script is intended to retrieve historical BTC/USD one-minute candles. Check the source code for the current output path, symbol configuration, and date range.
 
-```text
-data/btcusd_m1.csv
-```
+Before using the resulting data for research, validate:
 
-The output includes a timestamp and OHLC columns (`open`, `high`, `low`, `close`); a volume column is included if it is available in the API response. Timestamps are written in UTC.
+- Timestamp format and timezone.
+- Missing candles and duplicate observations.
+- OHLC price consistency.
+- Data coverage and the presence of stale or incomplete observations.
 
-### 5. Run the research notebook
+### API Credentials
 
-Start Jupyter:
+Never commit API client secrets, access tokens, passwords, or other authentication material to GitHub.
+
+If a script requires credentials, keep them in a local configuration file and exclude that file from version control. If credentials have already been exposed, revoke or rotate them.
+
+## Exploratory Analysis
+
+The repository includes Jupyter notebooks for investigating market data and momentum behavior.
+
+Start Jupyter with:
 
 ```bash
 jupyter notebook
 ```
 
-Open `DoubleMomentumAnalysis.ipynb` and run the cells in order. The notebook contains data-quality checks, time-series/autoregressive analysis, momentum calculations, and comparisons of mean returns for combinations of lookback periods.
+Open `DoubleMomentumAnalysis.ipynb` and execute its cells in order.
 
-Make sure the expected data file exists before running the notebook. Research results are exploratory and do not by themselves establish that a strategy is profitable after costs or out of sample.
+The analysis can be used to investigate:
 
-### 6. Run the cTrader bot
+- Price changes and their statistical properties.
+- Autocorrelation and short-term market dynamics.
+- Momentum over different lookback periods.
+- The relationship between momentum signals and subsequent price movements.
+- The sensitivity of results to parameter choices.
 
-Open `MomentumBot.py` in the appropriate cTrader Python cBot workflow, build/launch it in a **demo environment first**, and attach it to a BTC/USD M1 chart. Verify the symbol name, volume, pip conventions, and order protections for your broker before enabling trading.
+A positive historical relationship between a signal and price movements is not sufficient evidence of a profitable trading strategy. Evaluation should account for transaction costs, execution constraints, and out-of-sample performance.
 
-## Data notes
+## Running the Trading Bot
 
-- Candle data is retrieved from cTrader's Open API using a symbol ID configured in the script (`SYMBOL_ID = 128` in the uploaded version).
-- The candle downloader divides the requested period into windows and appends returned bars to a CSV, then removes duplicate timestamps and sorts the output.
-- The tick downloader uses separate BID and ASK requests and resamples the data to a one-second grid. Forward-filling quotes can leave stale prices in the output; inspect quote age and data coverage before using the resulting series for analysis or execution.
-- Validate timestamps, duplicates, missing intervals, price scaling, and the coverage of downloaded data before drawing conclusions.
+The repository contains both Python and C# implementations intended for the cTrader environment.
 
-## Limitations and next steps
+### Python
 
-- The current strategy is a simple rule-based signal; it does not include a demonstrated profitability guarantee.
-- The current bot leaves a position unchanged when the momentum signals disagree.
-- The configured stop loss and take profit are very tight and may be rejected or overwhelmed by spread and execution costs.
-- Backtests should model spread, commission, slippage, order execution, and realistic position sizing.
-- Separate parameter selection from out-of-sample evaluation to reduce overfitting.
-- Add explicit risk controls, such as a maximum daily loss and a maximum number of trades, before considering live deployment.
+1. Open `MomentumBot.py` in the appropriate cTrader Python cBot workflow.
+2. Review the configured symbol, momentum lookback periods, order volume, and protective orders.
+3. Build or launch the bot in cTrader.
+4. Attach it to a BTC/USD one-minute chart.
+5. Test it in a demo environment before considering live execution.
 
-## Disclaimer
+The strategy's lookback periods are expressed in candles. Using a one-minute chart is therefore important if the intention is to calculate one-minute and seven-minute momentum.
 
-Provided for educational and research purposes only. You are responsible for validating the code, complying with broker terms, protecting credentials, and assessing the risks of any trading activity.
+### C#
+
+Open `MomentumBotC.cs` in the appropriate cTrader Automate development environment.
+
+Before running the C# version, verify its parameters and compare its signal generation, order execution, and position management with the Python implementation.
+
+For official documentation, see the [cTrader cBots documentation](https://help.ctrader.com/cbots/).
+
+## Risk Management and Limitations
+
+This project is experimental. Several practical issues should be addressed before using the strategy with real capital.
+
+### Trading Costs
+
+Profitability may be materially affected by:
+
+- Bid-ask spreads.
+- Broker commissions and overnight financing, where applicable.
+- Slippage and execution latency.
+- Rejected orders and minimum order-distance restrictions.
+
+A strategy that appears profitable before costs may be unprofitable after realistic execution costs.
+
+### Stop Loss and Take Profit
+
+Verify the configured stop-loss and take-profit distances against the broker's BTC/USD contract specifications. cTrader order parameters may be denominated in pips, and pip size varies by instrument.
+
+Very tight protective orders may be rejected, triggered by ordinary market noise, or overwhelmed by transaction costs.
+
+### Position Management
+
+Confirm how the bot handles existing positions, opposing signals, failed orders, and repeated signals. Do not assume that a new signal automatically closes an existing position unless the implementation explicitly does so.
+
+### Backtesting and Validation
+
+A robust evaluation should include:
+
+- Chronological training, validation, and test periods.
+- Strict prevention
